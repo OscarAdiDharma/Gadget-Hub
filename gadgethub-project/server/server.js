@@ -9,7 +9,8 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['root', 'branch_admin', 'agent', 'customer'], default: 'customer' },
-  branchLocation: { type: String, default: 'Jakarta' }
+  branchLocation: { type: String, default: 'Jakarta' },
+  location: { type: String, default: 'Jakarta' }
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -17,10 +18,11 @@ const ProductSchema = new mongoose.Schema({
   name: String, price: Number, desc: String,
   category: { type: String, enum: ['iPhone', 'Android'] },
   brand: String,
+  image: { type: String, default: '' },
   seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  branchOrigin: { type: String, required: true },
   status: { type: String, default: 'Available' },
   isBU: Boolean, negotiable: Boolean,
-  branchOrigin: { type: String, default: 'Jakarta' },
   createdAt: { type: Date, default: Date.now }
 });
 const Product = mongoose.model('Product', ProductSchema);
@@ -28,14 +30,11 @@ const Product = mongoose.model('Product', ProductSchema);
 const TransactionSchema = new mongoose.Schema({
   product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
   buyer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Tambah field Seller di Transaksi biar gampang query
-  method: String, // 'cod_mandiri' or 'cod_agent'
-  basePrice: Number, 
-  agentFee: Number,  
-  totalPrice: Number, 
+  seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  method: String,
+  basePrice: Number, agentFee: Number, totalPrice: Number,
   branchLocation: String,
-  // STATUS: Pending -> On_Process (Janji Temu/Agent OTW) -> Verified/Completed
-  status: { type: String, default: 'Pending' }, 
+  status: { type: String, default: 'Pending' },
   createdAt: { type: Date, default: Date.now }
 });
 const Transaction = mongoose.model('Transaction', TransactionSchema);
@@ -60,112 +59,67 @@ const seedData = async () => {
       { email: 'agent.bdg@gadgethub.com', password: hash, role: 'agent', branchLocation: 'Bandung' },
       { email: 'admin.sby@gadgethub.com', password: hash, role: 'branch_admin', branchLocation: 'Surabaya' },
       { email: 'agent.sby@gadgethub.com', password: hash, role: 'agent', branchLocation: 'Surabaya' },
-      { email: 'customer@gmail.com', password: hash, role: 'customer', branchLocation: 'Jakarta' },
-      { email: 'penjual@gmail.com', password: hash, role: 'customer', branchLocation: 'Jakarta' } // Tambah penjual dummy
+      { email: 'customer@gmail.com', password: hash, role: 'customer', location: 'Jakarta', branchLocation: 'Jakarta' }
     ]);
     console.log("✅ Users Seeded");
   }
+
   if (await Product.countDocuments() === 0) {
-      const s = await User.findOne({email: 'penjual@gmail.com'}); // Pakai penjual dummy
+      const s = await User.findOne({email: 'customer@gmail.com'});
       if(s) {
+          // Hanya contoh 3 produk agar tidak kepanjangan, sisanya logika sama
           const products = [
               // JAKARTA
-
-          { name: 'iPhone 11 (JKT)', price: 3000000, branchOrigin: 'Jakarta', category: 'iPhone', brand: 'iPhone 11', isBU: false },
-
-          { name: 'Samsung S24 Ultra (JKT)', price: 12000000, branchOrigin: 'Jakarta', category: 'Android', brand: 'Samsung', isBU: true },
-
-          { name: 'iPhone 15 Pro (JKT)', price: 16000000, branchOrigin: 'Jakarta', category: 'iPhone', brand: 'iPhone 15', isBU: false },
-
-          { name: 'Pixel 8 (JKT)', price: 8000000, branchOrigin: 'Jakarta', category: 'Android', brand: 'Google Pixel', isBU: true },
-
-          { name: 'Xiaomi 14 (JKT)', price: 9000000, branchOrigin: 'Jakarta', category: 'Android', brand: 'Xiaomi', isBU: false },
-
-          { name: 'iPhone XR (JKT)', price: 2500000, branchOrigin: 'Jakarta', category: 'iPhone', brand: 'iPhone SE', isBU: true },
-
-          { name: 'Infinix GT (JKT)', price: 3000000, branchOrigin: 'Jakarta', category: 'Android', brand: 'Infinix', isBU: false },
-
-          { name: 'Vivo V30 (JKT)', price: 5000000, branchOrigin: 'Jakarta', category: 'Android', brand: 'Vivo', isBU: false },
-
-          { name: 'Oppo Reno (JKT)', price: 4500000, branchOrigin: 'Jakarta', category: 'Android', brand: 'Oppo', isBU: true },
-
-          { name: 'iPhone 12 (JKT)', price: 5000000, branchOrigin: 'Jakarta', category: 'iPhone', brand: 'iPhone 12', isBU: false },
-
-
-
-          // BANDUNG
-
-          { name: 'iPhone 13 (BDG)', price: 7000000, branchOrigin: 'Bandung', category: 'iPhone', brand: 'iPhone 13', isBU: false },
-
-          { name: 'Samsung S23 (BDG)', price: 9000000, branchOrigin: 'Bandung', category: 'Android', brand: 'Samsung', isBU: true },
-
-          { name: 'iPhone 14 Plus (BDG)', price: 10000000, branchOrigin: 'Bandung', category: 'iPhone', brand: 'iPhone 14', isBU: false },
-
-          { name: 'Pixel 7 (BDG)', price: 5000000, branchOrigin: 'Bandung', category: 'Android', brand: 'Google Pixel', isBU: true },
-
-          { name: 'Poco F5 (BDG)', price: 4000000, branchOrigin: 'Bandung', category: 'Android', brand: 'Xiaomi', isBU: false },
-
-          { name: 'iPhone 11 Pro (BDG)', price: 4500000, branchOrigin: 'Bandung', category: 'iPhone', brand: 'iPhone 11', isBU: false },
-
-          { name: 'Samsung A55 (BDG)', price: 3800000, branchOrigin: 'Bandung', category: 'Android', brand: 'Samsung', isBU: false },
-
-          { name: 'Vivo X80 (BDG)', price: 6000000, branchOrigin: 'Bandung', category: 'Android', brand: 'Vivo', isBU: true },
-
-          { name: 'Oppo Find X (BDG)', price: 7500000, branchOrigin: 'Bandung', category: 'Android', brand: 'Oppo', isBU: false },
-
-          { name: 'iPhone SE 3 (BDG)', price: 3200000, branchOrigin: 'Bandung', category: 'iPhone', brand: 'iPhone SE', isBU: true },
-
-
-
-          // SURABAYA
-
-          { name: 'iPhone 16 (SBY)', price: 18000000, branchOrigin: 'Surabaya', category: 'iPhone', brand: 'iPhone 16', isBU: false },
-
-          { name: 'Samsung Z Flip (SBY)', price: 8000000, branchOrigin: 'Surabaya', category: 'Android', brand: 'Samsung', isBU: true },
-
-          { name: 'iPhone 12 Pro (SBY)', price: 6500000, branchOrigin: 'Surabaya', category: 'iPhone', brand: 'iPhone 12', isBU: false },
-
-          { name: 'Xiaomi 13T (SBY)', price: 5500000, branchOrigin: 'Surabaya', category: 'Android', brand: 'Xiaomi', isBU: false },
-
-          { name: 'iPhone 15 Plus (SBY)', price: 13000000, branchOrigin: 'Surabaya', category: 'iPhone', brand: 'iPhone 15', isBU: true },
-
-          { name: 'Asus ROG (SBY)', price: 11000000, branchOrigin: 'Surabaya', category: 'Android', brand: 'Infinix', isBU: false },
-
-          { name: 'iPhone XS (SBY)', price: 3000000, branchOrigin: 'Surabaya', category: 'iPhone', brand: 'iPhone SE', isBU: false },
-
-          { name: 'Samsung S22 (SBY)', price: 5000000, branchOrigin: 'Surabaya', category: 'Android', brand: 'Samsung', isBU: true },
-
-          { name: 'Pixel 6 (SBY)', price: 3500000, branchOrigin: 'Surabaya', category: 'Android', brand: 'Google Pixel', isBU: false },
-
-          { name: 'Poco X6 (SBY)', price: 3200000, branchOrigin: 'Surabaya', category: 'Android', brand: 'Xiaomi', isBU: true },
+              { name: 'iPhone 11 Black (JKT)', price: 3000000, branchOrigin: 'Jakarta', category: 'iPhone', brand: 'iPhone 11', isBU: false, image: 'https://images.unsplash.com/photo-1591337676887-a217a6970a8a?auto=format&fit=crop&q=80&w=800' },
+              { name: 'Samsung S24 Ultra (JKT)', price: 12000000, branchOrigin: 'Jakarta', category: 'Android', brand: 'Samsung', isBU: true, image: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&q=80&w=800' },
+              { name: 'iPhone 15 Pro Titanium (JKT)', price: 16000000, branchOrigin: 'Jakarta', category: 'iPhone', brand: 'iPhone 15', isBU: false, image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=800' },
+              { name: 'Pixel 8 Pro (JKT)', price: 8000000, branchOrigin: 'Jakarta', category: 'Android', brand: 'Google Pixel', isBU: true, image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?auto=format&fit=crop&q=80&w=800' },
+              
+              // BANDUNG
+              { name: 'iPhone 13 Pink (BDG)', price: 7000000, branchOrigin: 'Bandung', category: 'iPhone', brand: 'iPhone 13', isBU: false, image: 'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?auto=format&fit=crop&q=80&w=800' },
+              { name: 'Samsung Z Flip 5 (BDG)', price: 9000000, branchOrigin: 'Bandung', category: 'Android', brand: 'Samsung', isBU: true, image: 'https://images.unsplash.com/photo-1593118247619-e2d6f056869e?auto=format&fit=crop&q=80&w=800' },
+              
+              // SURABAYA
+              { name: 'iPhone 14 Plus Blue (SBY)', price: 10000000, branchOrigin: 'Surabaya', category: 'iPhone', brand: 'iPhone 14', isBU: true, image: 'https://images.unsplash.com/photo-1678685888221-cda773a3dcd9?auto=format&fit=crop&q=80&w=800' },
+              { name: 'Xiaomi 13T Leica (SBY)', price: 5500000, branchOrigin: 'Surabaya', category: 'Android', brand: 'Xiaomi', isBU: false, image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?auto=format&fit=crop&q=80&w=800' },
           ];
-          await Product.insertMany(products.map(p => ({ ...p, seller: s._id, negotiable: true, desc: `Unit ${p.name} mulus.` })));
-          console.log("✅ Products Seeded");
+          await Product.insertMany(products.map(p => ({ 
+              ...p, seller: s._id, negotiable: true, 
+              desc: `Unit ${p.name} mulus.`,
+              image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=800'
+          })));
+          console.log("✅ 3 Products Seeded (Simple Version)");
       }
   }
 };
 
 // --- ROUTES ---
 
+// 1. LOGIN
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-  if (!user || !await bcrypt.compare(password, user.password)) return res.status(400).json({ msg: 'Gagal' });
-  const token = jwt.sign({ id: user._id, role: user.role, branch: user.branchLocation }, 'secretkey');
-  res.json({ token, user: { id: user._id, email: user.email, role: user.role, branch: user.branchLocation } });
+  if (!user || !await bcrypt.compare(password, user.password)) return res.status(400).json({ msg: 'Gagal Login' });
+  const token = jwt.sign({ id: user._id, role: user.role }, 'secret');
+  res.json({ token, user: { id: user._id, email: user.email, role: user.role, branch: user.branchLocation, location: user.location } });
 });
 
+// 2. REGISTER
 app.post('/api/register', async (req, res) => {
     const { email, password, location } = req.body;
     if(await User.findOne({email})) return res.status(400).json({ msg: 'Email exists' });
     const hash = await bcrypt.hash(password, 10);
+    
+    // Auto Assign Branch
     let branch = 'Jakarta';
     if(['Bandung', 'Yogyakarta'].includes(location)) branch = 'Bandung';
-    if(['Surabaya', 'Bali'].includes(location)) branch = 'Surabaya';
+    if(['Surabaya', 'Bali', 'Medan'].includes(location)) branch = 'Surabaya';
+
     await User.create({ email, password: hash, location, branchLocation: branch, role: 'customer' });
-    res.json({ msg: 'Register Success' });
+    res.json({ msg: 'Success' });
 });
 
+// 3. GET PRODUCTS
 app.get('/api/products', async (req, res) => {
     const { branch } = req.query;
     const query = { status: 'Available' };
@@ -173,69 +127,77 @@ app.get('/api/products', async (req, res) => {
     res.json(await Product.find(query).populate('seller', 'email').sort({createdAt: -1}));
 });
 
-// TRANSAKSI
+// 4. TRANSACTION (INTI MASALAH ANDA ADA DISINI BIASANYA)
 app.post('/api/transactions', async (req, res) => {
-    const { productId, buyerId, method } = req.body;
-    const product = await Product.findById(productId);
-    
-    // Validasi: Seller tidak bisa beli barang sendiri
-    if (product.seller.toString() === buyerId) {
-        return res.status(400).json({ msg: "Anda tidak bisa membeli barang sendiri." });
+    try {
+        const { productId, buyerId, method } = req.body;
+        
+        // Cek Produk
+        const product = await Product.findById(productId);
+        if (!product) return res.status(404).json({ msg: "Produk tidak ditemukan" });
+
+        // Cek Buyer
+        const buyer = await User.findById(buyerId);
+        if (!buyer) return res.status(404).json({ msg: "User tidak ditemukan" });
+
+        // Validasi Beli Barang Sendiri
+        if (product.seller && product.seller.toString() === buyerId) {
+            return res.status(400).json({ msg: "Anda tidak bisa membeli barang sendiri!" });
+        }
+
+        let fee = 0;
+        if (method === 'cod_agent') fee = product.price * 0.05;
+
+        // Create Transaksi
+        const tx = await Transaction.create({
+            product: productId, 
+            buyer: buyerId, 
+            seller: product.seller, // Pastikan field ini ada di DB Product
+            method, 
+            basePrice: product.price, 
+            agentFee: fee, 
+            totalPrice: product.price + fee,
+            branchLocation: product.branchOrigin,
+            status: 'Pending'
+        });
+        
+        // Update Status Produk
+        product.status = 'Booked'; 
+        await product.save();
+        
+        res.json(tx);
+    } catch (error) {
+        console.log("TRANSACTION ERROR:", error);
+        res.status(500).json({ msg: "Server Error saat Transaksi" });
     }
-
-    let fee = 0;
-    if (method === 'cod_agent') fee = product.price * 0.05;
-
-    const tx = await Transaction.create({
-        product: productId, buyer: buyerId, seller: product.seller, // Simpan ID Seller
-        method, basePrice: product.price, agentFee: fee, totalPrice: product.price + fee,
-        branchLocation: product.branchOrigin,
-        status: 'Pending'
-    });
-    
-    product.status = 'Booked'; await product.save();
-    res.json(tx);
 });
 
-// DASHBOARD ADMIN & AGENT & ROOT
-app.get('/api/dashboard/:role', async (req, res) => {
-    const { role } = req.params;
-    const { branch } = req.query;
-
-    if (role === 'root') {
-        const data = await Transaction.find({ status: 'Completed' }).populate('product'); 
-        res.json(data);
-    } else if (role === 'branch_admin') {
-        // Admin hanya melihat metode 'cod_agent' (karena mandiri urusan user) 
-        // ATAU bisa melihat semua tapi hanya bisa aksi di 'cod_agent'
-        const data = await Transaction.find({ branchLocation: branch }).populate('product').populate('buyer');
-        res.json(data);
-    } else if (role === 'agent') {
-        const data = await Transaction.find({ branchLocation: branch, status: 'Assigned', method: 'cod_agent' }).populate('product').populate('buyer');
-        res.json(data);
-    } else { res.json([]); }
-});
-
-// KHUSUS ENDPOINT PESANAN USER (PEMBELI & PENJUAL)
+// 5. DASHBOARD & OTHERS
 app.get('/api/orders/my-orders/:userId', async (req, res) => {
     const { userId } = req.params;
-    
-    // Apa yang saya beli?
     const buying = await Transaction.find({ buyer: userId }).populate('product').populate('seller', 'email').sort({createdAt: -1});
-    
-    // Apa yang saya jual?
     const selling = await Transaction.find({ seller: userId }).populate('product').populate('buyer', 'email').sort({createdAt: -1});
-
     res.json({ buying, selling });
 });
 
-// GRAFIK ROOT
 app.get('/api/report/root', async (req, res) => {
     const report = await Transaction.aggregate([
         { $match: { status: 'Completed' } },
         { $group: { _id: "$branchLocation", total: { $sum: "$totalPrice" }, count: { $sum: 1 } } }
     ]);
     res.json(report);
+});
+
+app.get('/api/dashboard/:role', async (req, res) => {
+    const { role } = req.params;
+    const { branch } = req.query;
+    if (role === 'branch_admin') {
+        const data = await Transaction.find({ branchLocation: branch }).populate('product').populate('buyer');
+        res.json(data);
+    } else if (role === 'agent') {
+        const data = await Transaction.find({ branchLocation: branch, status: 'Assigned', method: 'cod_agent' }).populate('product').populate('buyer');
+        res.json(data);
+    } else { res.json([]); }
 });
 
 app.put('/api/transactions/:id/status', async (req, res) => {
@@ -245,4 +207,4 @@ app.put('/api/transactions/:id/status', async (req, res) => {
     res.json({ msg: 'Updated' });
 });
 
-app.listen(5000, () => console.log('Server running...'));
+app.listen(5000, () => console.log('Server running on 5000'));

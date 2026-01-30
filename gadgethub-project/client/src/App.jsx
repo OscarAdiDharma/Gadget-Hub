@@ -238,6 +238,7 @@ const SellModal = ({ isOpen, onClose, user }) => {
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
     const [desc, setDesc] = useState('');
+    const [image, setImage] = useState(''); // State Baru
     const [category, setCategory] = useState('iPhone'); 
     const [brand, setBrand] = useState(IPHONE_MODELS[0]);
     const [isBU, setIsBU] = useState(false);
@@ -247,42 +248,42 @@ const SellModal = ({ isOpen, onClose, user }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!user) return alert("Login dulu.");
         try {
             await axios.post('http://localhost:5000/api/products', {
-                name, price: parseInt(price), desc, category, brand, sellerId: user.id, isBU, negotiable
+                name, price: parseInt(price), desc, category, brand, 
+                image: image || 'https://placehold.co/600x400?text=No+Image', // Kirim Image
+                sellerId: user.id, isBU, negotiable,
+                branchOrigin: user.location || user.branch || 'Jakarta'
             });
-            alert("Iklan Berhasil Tayang!"); onClose(); window.location.reload();
-        } catch (error) { alert("Gagal posting produk. Pastikan semua data terisi."); }
+            alert("Tayang!"); onClose(); window.location.reload();
+        } catch (error) { alert("Gagal."); }
     }
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
             <div className="bg-white rounded-[2rem] p-8 w-full max-w-lg shadow-2xl relative overflow-hidden">
-                <button onClick={onClose} className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center font-bold transition">✕</button>
-                <h2 className="text-3xl font-bold mb-2 text-gray-900">Jual Gadget</h2>
-                <p className="text-gray-500 mb-8">Pasang iklan gratis, jangkau ribuan pembeli.</p>
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    <div className="grid grid-cols-2 gap-4 p-1 bg-gray-100 rounded-2xl">
-                        <button type="button" onClick={() => { setCategory('iPhone'); setBrand(IPHONE_MODELS[0]); }} className={`py-3 rounded-xl font-bold text-sm transition-all duration-300 ${category === 'iPhone' ? 'bg-white text-black shadow-md' : 'text-gray-500 hover:text-gray-700'}`}>📱 iPhone</button>
-                        <button type="button" onClick={() => { setCategory('Android'); setBrand(ANDROID_BRANDS[0]); }} className={`py-3 rounded-xl font-bold text-sm transition-all duration-300 ${category === 'Android' ? 'bg-white text-black shadow-md' : 'text-gray-500 hover:text-gray-700'}`}>🤖 Android</button>
+                <button onClick={onClose} className="absolute top-6 right-6 text-gray-400 hover:text-black">✕</button>
+                <h2 className="text-3xl font-bold mb-4 text-gray-900">Jual Gadget</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <button type="button" onClick={() => { setCategory('iPhone'); setBrand(IPHONE_MODELS[0]); }} className={`py-3 rounded-xl font-bold border ${category === 'iPhone' ? 'bg-black text-white' : ''}`}>iPhone</button>
+                        <button type="button" onClick={() => { setCategory('Android'); setBrand(ANDROID_BRANDS[0]); }} className={`py-3 rounded-xl font-bold border ${category === 'Android' ? 'bg-black text-white' : ''}`}>Android</button>
                     </div>
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Tipe / Model</label>
-                        <div className="relative">
-                            <select value={brand} onChange={(e) => setBrand(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none font-medium text-gray-900">
-                                {category === 'iPhone' ? IPHONE_MODELS.map(m => <option key={m} value={m}>{m}</option>) : ANDROID_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
-                            </select>
-                            <div className="absolute right-4 top-4 text-gray-400 pointer-events-none">▼</div>
-                        </div>
-                    </div>
-                    <input required placeholder="Judul Iklan (Contoh: iPhone 15 Pro Max Mulus Fullset)" value={name} onChange={e => setName(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl outline-none border border-gray-200 focus:border-blue-500 transition font-medium placeholder-gray-400" />
-                    <div className="relative"><span className="absolute left-4 top-4 text-gray-500 font-bold">Rp</span><input required type="number" placeholder="Harga Jual" value={price} onChange={e => setPrice(e.target.value)} className="w-full p-4 pl-12 bg-gray-50 rounded-xl outline-none border border-gray-200 focus:border-blue-500 transition font-bold text-lg" /></div>
+                    <select value={brand} onChange={(e) => setBrand(e.target.value)} className="w-full p-3 bg-gray-100 rounded-xl font-medium">{category === 'iPhone' ? IPHONE_MODELS.map(m => <option key={m} value={m}>{m}</option>) : ANDROID_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}</select>
+                    
+                    <input required placeholder="Judul Iklan" value={name} onChange={e => setName(e.target.value)} className="w-full p-3 border rounded-xl" />
+                    <input required type="number" placeholder="Harga" value={price} onChange={e => setPrice(e.target.value)} className="w-full p-3 border rounded-xl" />
+                    
+                    {/* INPUT GAMBAR BARU */}
+                    <input placeholder="Paste Link Foto HP (URL)" value={image} onChange={e => setImage(e.target.value)} className="w-full p-3 border rounded-xl bg-blue-50 text-blue-800 placeholder-blue-300" />
+                    
                     <div className="flex gap-4">
-                        <label className={`flex-1 p-4 rounded-xl border cursor-pointer transition flex items-center justify-center gap-3 ${isBU ? 'bg-red-50 border-red-500 text-red-700' : 'bg-white border-gray-200 hover:bg-gray-50'}`}><input type="checkbox" checked={isBU} onChange={e => setIsBU(e.target.checked)} className="w-5 h-5 accent-red-600" /><span className="font-bold text-sm">⚡ Lagi BU (Cepat)</span></label>
-                        <label className={`flex-1 p-4 rounded-xl border cursor-pointer transition flex items-center justify-center gap-3 ${negotiable ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-200 hover:bg-gray-50'}`}><input type="checkbox" checked={negotiable} onChange={e => setNegotiable(e.target.checked)} className="w-5 h-5 accent-green-600" /><span className="font-bold text-sm">🤝 Boleh Nego</span></label>
+                        <label className="flex items-center gap-2 font-bold text-sm"><input type="checkbox" checked={isBU} onChange={e => setIsBU(e.target.checked)} /> ⚡ BU</label>
+                        <label className="flex items-center gap-2 font-bold text-sm"><input type="checkbox" checked={negotiable} onChange={e => setNegotiable(e.target.checked)} /> 🤝 Nego</label>
                     </div>
-                    <textarea required placeholder="Jelaskan kondisi fisik, minus, dan kelengkapan sejujur-jujurnya..." value={desc} onChange={e => setDesc(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl outline-none h-32 border border-gray-200 focus:border-blue-500 transition text-sm resize-none"></textarea>
-                    <button type="submit" className="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-gray-800 shadow-xl shadow-gray-200 transition transform hover:-translate-y-1">Tayangkan Iklan Sekarang</button>
+                    <textarea placeholder="Deskripsi..." value={desc} onChange={e => setDesc(e.target.value)} className="w-full p-3 border rounded-xl h-20"></textarea>
+                    <button type="submit" className="w-full bg-black text-white py-3 rounded-xl font-bold">Tayangkan</button>
                 </form>
             </div>
         </div>
@@ -292,26 +293,33 @@ const SellModal = ({ isOpen, onClose, user }) => {
 // D. PRODUCT DETAIL MODAL (Detail & Pilihan COD)
 const ProductDetailModal = ({ isOpen, onClose, product, onBuy }) => {
     if (!isOpen || !product) return null;
-    const agentFee = product.price * 0.05; 
-    const totalPriceWithAgent = product.price + agentFee;
+    const fee = product.price * 0.05;
 
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fade-in">
             <div className="bg-white rounded-[2.5rem] w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[95vh] relative">
-                <button onClick={onClose} className="absolute top-6 right-6 z-20 bg-white/80 backdrop-blur p-2 rounded-full text-gray-800 hover:bg-gray-100 transition shadow-sm md:hidden">✕</button>
-                <div className="w-full md:w-5/12 bg-gray-50 flex flex-col items-center justify-center p-12 relative border-r border-gray-100">
-                    <div className="w-64 h-96 bg-white rounded-[3rem] border-8 border-gray-200 shadow-2xl flex items-center justify-center transform hover:scale-105 transition duration-700 ease-out"><span className="text-gray-300 font-bold text-2xl tracking-widest">{product.brand}</span></div>
-                    {product.isBU && <div className="absolute top-8 left-8 bg-red-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg animate-pulse flex items-center gap-2"><span>🔥</span> BUTUH UANG CEPAT</div>}
-                    <div className="absolute bottom-8 w-full px-8 text-center"><div className="bg-white/80 backdrop-blur px-6 py-3 rounded-2xl shadow-sm border border-gray-200 inline-block"><span className="text-gray-500 text-xs font-bold uppercase tracking-wide">Lokasi Barang</span><p className="text-lg font-bold text-gray-900 mt-1">📍 {product.branchOrigin}</p></div></div>
+                <button onClick={onClose} className="absolute top-6 right-6 z-20 bg-white/80 p-2 rounded-full hover:bg-gray-200 transition">✕</button>
+                
+                {/* BAGIAN GAMBAR */}
+                <div className="w-full md:w-5/12 bg-black flex items-center justify-center relative overflow-hidden">
+                    <img 
+                        src={product.image || "https://placehold.co/600x800?text=No+Image"} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover opacity-90 hover:opacity-100 transition duration-500"
+                    />
+                    {product.isBU && <div className="absolute top-6 left-6 bg-red-600 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">⚡ BU PARAH</div>}
+                    <div className="absolute bottom-6 left-6 bg-black/60 text-white backdrop-blur px-4 py-2 rounded-full text-sm font-bold shadow-sm">📍 {product.branchOrigin}</div>
                 </div>
+
                 <div className="w-full md:w-7/12 p-8 md:p-12 flex flex-col overflow-y-auto bg-white">
-                    <div className="flex justify-between items-start mb-6"><div><div className="flex items-center gap-2 mb-2"><span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider">{product.category}</span><span className="text-gray-300">•</span><span className="text-gray-500 text-xs font-bold uppercase">{product.brand}</span></div><h2 className="text-4xl font-bold text-gray-900 leading-tight mb-2">{product.name}</h2><div className="flex items-center gap-2"><div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-500">?</div><p className="text-gray-500 text-sm font-medium">Penjual: <span className="text-black underline cursor-pointer">@{getDisplayName(product.seller?.email)}</span></p></div></div><button onClick={onClose} className="hidden md:flex bg-gray-50 hover:bg-gray-100 w-10 h-10 rounded-full items-center justify-center text-gray-500 transition font-bold text-lg">✕</button></div>
-                    <div className="my-6 py-6 border-t border-b border-gray-100"><h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-lg">📝 Deskripsi & Kondisi</h3><div className="bg-gray-50 p-6 rounded-2xl border border-gray-100"><p className="text-gray-700 whitespace-pre-line leading-relaxed">{product.desc || "Penjual tidak menyertakan deskripsi detail. Harap cek fisik dengan teliti saat COD."}</p></div></div>
-                    <div className="mt-auto space-y-6">
-                        <div><p className="text-sm text-gray-400 font-bold uppercase tracking-wide mb-1">Harga Penawaran</p><div className="flex items-end gap-4"><p className="text-4xl font-bold text-gray-900 tracking-tight">{formatRupiah(product.price)}</p>{product.negotiable && <span className="mb-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wide">Bisa Nego</span>}</div></div>
+                    <h2 className="text-4xl font-bold text-gray-900 leading-tight mb-2">{product.name}</h2>
+                    <p className="text-gray-500 text-sm font-medium mb-6">Seller: @{getDisplayName(product.seller?.email)}</p>
+                    <div className="bg-gray-50 p-6 rounded-2xl mb-6 border border-gray-100"><p className="text-gray-700 leading-relaxed text-sm">{product.desc}</p></div>
+                    <div className="mt-auto space-y-4">
+                        <p className="text-3xl font-bold text-gray-900">{formatRupiah(product.price)}</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <button onClick={() => onBuy(product._id, product.price, 'cod_mandiri')} className="group p-4 rounded-2xl border-2 border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition text-left relative overflow-hidden"><div className="relative z-10"><div className="font-bold text-gray-900 text-lg mb-1">🤝 COD Mandiri</div><div className="text-xs text-gray-500 font-medium">Ketemuan langsung dengan penjual.</div><div className="mt-3 font-bold text-gray-900 bg-white inline-block px-3 py-1 rounded-lg border shadow-sm">Total: {formatRupiah(product.price)}</div></div></button>
-                            <button onClick={() => onBuy(product._id, product.price, 'cod_agent')} className="group p-4 rounded-2xl bg-black hover:bg-gray-800 transition text-left relative overflow-hidden shadow-xl"><div className="relative z-10"><div className="font-bold text-white text-lg mb-1 flex items-center gap-2">🛡️ COD Agent <span className="bg-blue-600 text-[10px] px-2 py-0.5 rounded text-white">Safe</span></div><div className="text-xs text-gray-400 font-medium">Verifikasi fisik oleh Tim GadgetHUB.</div><div className="mt-3 font-bold text-white bg-white/10 inline-block px-3 py-1 rounded-lg border border-white/20">Total: {formatRupiah(totalPriceWithAgent)}</div><p className="text-[10px] text-gray-500 mt-1 absolute right-0 bottom-0">*Termasuk Fee 5%</p></div></button>
+                            <button onClick={() => onBuy(product._id, product.price, 'cod_mandiri')} className="py-4 border-2 border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 flex justify-between px-6 items-center"><span>🤝 COD Mandiri</span></button>
+                            <button onClick={() => onBuy(product._id, product.price, 'cod_agent')} className="py-4 bg-black rounded-xl font-bold text-white hover:bg-gray-800 shadow-xl flex justify-between px-6 items-center"><span>🛡️ COD Agent (+5%)</span></button>
                         </div>
                     </div>
                 </div>
@@ -323,11 +331,28 @@ const ProductDetailModal = ({ isOpen, onClose, product, onBuy }) => {
 // E. PRODUCT CARD COMPONENT
 const ProductCard = ({ product, onClick }) => {
   return (
-    <div onClick={() => onClick(product)} className="group bg-white rounded-[2rem] p-5 shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col cursor-pointer relative overflow-hidden h-full">
-      {product.isBU && <div className="absolute top-0 left-0 bg-gradient-to-r from-red-600 to-red-500 text-white text-[10px] font-bold px-4 py-1.5 rounded-br-2xl z-20 shadow-lg">⚡ LAGI BU</div>}
-      <div className="flex justify-between items-start mb-4 mt-2 px-1"><span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm">{product.branchOrigin}</span><span className="text-xs text-gray-400 font-medium flex items-center gap-1">👤 {getDisplayName(product.seller?.email)}</span></div>
-      <div className="aspect-[4/5] bg-gray-50 rounded-3xl mb-5 relative overflow-hidden flex items-center justify-center group-hover:bg-gray-100 transition-colors"><div className="w-24 h-40 bg-white rounded-2xl border-4 border-gray-200 shadow-inner flex items-center justify-center group-hover:scale-110 transition-transform duration-500"><span className="text-gray-300 font-bold text-xs text-center px-2 leading-tight">{product.name}</span></div><div className="absolute inset-0 bg-black/5 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center"><span className="bg-white text-black px-6 py-2.5 rounded-full text-sm font-bold shadow-xl transform translate-y-4 group-hover:translate-y-0 transition hover:bg-gray-50">Lihat Detail</span></div></div>
-      <div className="flex-1 flex flex-col px-1"><h3 className="text-lg font-bold text-gray-900 tracking-tight mb-1 line-clamp-1 group-hover:text-blue-600 transition">{product.name}</h3><p className="text-sm text-gray-500 font-medium mb-4 line-clamp-2 leading-relaxed">{product.desc || 'Tidak ada deskripsi.'}</p><div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50"><p className="text-lg font-bold text-gray-900">{formatRupiah(product.price)}</p>{product.negotiable && <span className="text-[10px] bg-green-50 text-green-700 px-2.5 py-1 rounded-lg font-bold border border-green-100">Nego</span>}</div></div>
+    <div onClick={() => onClick(product)} className="group bg-white rounded-[2rem] p-4 shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col cursor-pointer relative overflow-hidden h-full">
+      {product.isBU && <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full z-20 shadow-lg">⚡ BU</div>}
+      
+      {/* AREA GAMBAR */}
+      <div className="aspect-[4/5] bg-gray-100 rounded-3xl mb-4 relative overflow-hidden">
+        <img 
+            src={product.image || "https://placehold.co/400x500?text=No+Image"} 
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
+        />
+        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition"></div>
+        <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-[10px] font-bold shadow-sm">📍 {product.branchOrigin}</div>
+      </div>
+
+      <div className="flex-1 flex flex-col px-1">
+        <h3 className="text-lg font-bold text-gray-900 tracking-tight mb-1 line-clamp-1">{product.name}</h3>
+        <p className="text-xs text-gray-400 mb-3 line-clamp-1">{product.desc}</p>
+        <div className="flex items-center justify-between mt-auto">
+            <p className="text-lg font-bold text-blue-600">{formatRupiah(product.price)}</p>
+            {product.negotiable && <span className="text-[10px] bg-green-50 text-green-700 px-2 py-1 rounded-lg font-bold border border-green-100">Nego</span>}
+        </div>
+      </div>
     </div>
   );
 };
